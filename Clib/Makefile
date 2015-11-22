@@ -5,18 +5,28 @@ NAME = libft libft2
 libft_SRC_DIR = src
 libft_INCLUDE_DIR = include
 libft_SRCS = aaa.c bbb.c
-libft_INCLUDES = libft.h
+#libft_INCLUDES = libft.h
 
 libft2_SRC_DIR = src
 libft2_INCLUDE_DIR = include
 libft2_SRCS = ccc.c ddd.c
-libft2_INCLUDES = libft2.h
+#libft2_INCLUDES = libft2.h
+
+EXTRA_DIR = extra
+LIB_DIR = lib
+BIN_DIR = bin
+
+TEST ?= main
 
 BUILD_DIR = .build
-LIB_DIR = lib
 
 NAME_PATH_TMP = $(addsuffix .a,$(NAME))
 NAME_PATH = $(addprefix $(LIB_DIR)/,$(NAME_PATH_TMP))
+
+LDLIBS = $(subst lib,-l,$(NAME))
+LDFLAGS = -L $(LIB_DIR)
+CFLAGS += -Wall -Wextra -std=c89 -ansi
+CFLAGS += $(foreach x,$(NAME),-I $($(x)_INCLUDE_DIR))
 
 all: $(NAME_PATH)
 
@@ -28,10 +38,18 @@ $(foreach x,$(NAME),$(eval $(x)_INCLUDES = $(addprefix $($(x)_INCLUDE_DIR)/,$($(
 #INC_DIRS = $(foreach x,$(NAME),$($(x)_INCLUDE_DIR))
 #OBJ_DIRS = $(foreach x,$(NAME),build/$($(x)_OBJ_DIR))
 
+lol:
+	@echo $(CFLAGS)
 
+ifneq ($(LIB_DIR),.)
 $(LIB_DIR):
 	@mkdir -p $(LIB_DIR)
+endif
 
+ifneq ($(BIN_DIR),.)
+$(BIN_DIR):
+	@mkdir -p $(BIN_DIR)
+endif
 # 1 : objdir
 # 2 : srcdir
 # 3 : dep lists
@@ -51,18 +69,24 @@ endef
 $(foreach x,$(NAME),$(eval $(call AR_TEMPLATE,$(x))))
 
 
+
 clean:
-	@echo Delete $(BUILD_DIR) folder
-	@rm -rf $(BUILD_DIR)
+	@echo Clean $(BUILD_DIR) folder
+	@$(RM) -r $(foreach x,$(NAME),$(addprefix $(BUILD_DIR)/,$(x)))
 
 cleanlib:
-	@rm -rf $(NAME_PATH)
+	@$(RM) -r $(NAME_PATH)
+	@$(RM) $(BIN_DIR)/$(TEST)
 	@rmdir $(LIB_DIR) 2> /dev/null || true
+	@rmdir $(BUILD_DIR) 2> /dev/null || true
+	@$(RM) -r $(BIN_DIR) 2> /dev/null || true
 
 fclean: clean cleanlib
 	@echo Full clean OK.
 
 re: fclean all
 
+test: all $(BIN_DIR)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(LDLIBS) $(EXTRA_DIR)/$(TEST).c -o $(BIN_DIR)/$(TEST)
 
 .PHONY: clean fclean re all test
