@@ -1,0 +1,38 @@
+PACKAGES = sdl2
+CFLAGS = -Wall -Wextra -Werror -O3 -I libft/includes $(shell pkg-config --cflags $(PACKAGES))
+#CFLAGS += -g3 -O0
+LDFLAGS = $(shell pkg-config --libs $(PACKAGES)) -lm
+OBJS = wolf3d.o game_logic.o render_map.o render_3d.o geom.o
+SRCS = $(OBJS:.o=.c)
+LIBFT = libft/libft.a
+NAME = wolf3d
+
+all: $(NAME)
+
+$(NAME): $(OBJS) $(LIBFT)
+
+$(LIBFT):
+	$(MAKE) -C libft/
+
+clean:
+	rm -f $(OBJS)
+
+fclean: clean
+	rm -f $(NAME)
+
+re:
+	$(MAKE) fclean
+	$(MAKE) all
+
+test: $(NAME)
+	./$(NAME)
+
+$(OBJS): Makefile
+
+depend: .depend
+
+.depend: $(SRCS)
+	rm -f ./.depend
+	$(CC) $(CFLAGS) -MM $^ > ./.depend;
+
+include .depend
