@@ -73,15 +73,20 @@ a.out_CFLAGS += $(CFLAGS)
 #OUT_NAME = $(basename $(OUT))
 #OUT_FULL = $(addprefix $(LIB_DIR)/,$(OUT))
 
+### TODO
+BUILD_FULL += $(a.out_SRC_DIR)/$(BUILD_DIR)
 
-all: $(a.out_SRC_DIR)/$(BUILD_DIR) $(OUT_FULL)
+
+
+############################
+all: $(BUILD_FULL) $(OUT_FULL)
 
 $(LIB_DIR):
 	@mkdir -p $(LIB_DIR)
 
 $(BIN_DIR):
 	@mkdir -p $(BIN_DIR)
-
+#############################
 
 
 #./libft/lib/libft.a:
