@@ -1,3 +1,7 @@
+###########################################
+### Generic.mk by trapcodien@hotmail.fr ###
+###########################################
+
 CFLAGS = -Wall -Wextra
 
 EXTRA_DIR ?= extra
@@ -111,10 +115,10 @@ $(a.out_BIN_DIR)/$(a.out_NAME): $(a.out_BIN_DIR) $(a.out_OBJS_FULL) $(a.out_LIBS
 	$(CC) $(CFLAGS) $(a.out_LDFLAGS) $(a.out_LDLIBS) $(a.out_OBJS_FULL) -o $(a.out_BIN_DIR)/$(a.out_NAME)
 endif
 
+
+
 clean_a.out:
 	@$(RM) -r $(a.out_SRC_DIR)/$(BUILD_DIR)
-
-
 
 ifeq ($(suffix $(a.out_NAME)),.a)
 cleanout_a.out:
@@ -125,6 +129,9 @@ cleanout_a.out:
 	@$(RM) $(a.out_BIN_DIR)/$(a.out_NAME)
 	@rmdir $(a.out_BIN_DIR) 2> /dev/null || true
 endif
+
+.PHONY += clean_a.out cleanout_a.out
+
 
 cleanout: cleanout_a.out
 clean: clean_a.out
@@ -147,4 +154,4 @@ re: fclean all
 -include .depend
 
 
-.PHONY: all depend clean_depend cleanout_a.out fclean
+.PHONY: all re clean fclean $(.PHONY)
