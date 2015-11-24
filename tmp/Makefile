@@ -23,10 +23,17 @@ libft_BIN_DIR = .
 libft_SRCS = main.c a.c 
 
 
+
+
+
+
+
 libft_NAME = $(LIBS) ### TODO
 
 libft_LIB_DIR ?= $(LIB_DIR)
 libft_BIN_DIR ?= $(BIN_DIR)
+libft_SRC_DIR ?= $(SRC_DIR)
+libft_INCLUDE_DIRS ?= $(INCLUDE_DIR)
 
 ifeq ($(suffix $(libft_NAME)),.a)
   LIBS_FULL += $(libft_LIB_DIR)/$(libft_NAME)
@@ -34,7 +41,7 @@ else
   LIBS_FULL += $(libft_BIN_DIR)/$(libft_NAME)
 endif
 
-libft_INCLUDE_DIRS := $(addprefix -I ,$(libft_INCLUDE_DIRS))
+libft_CFLAGS = $(addprefix -I ,$(libft_INCLUDE_DIRS))
 
 
 ########### Common.mk #######################
@@ -65,9 +72,8 @@ $(libft_SRC_DIR)/$(BUILD_DIR):
 
 
 $(libft_SRC_DIR)/$(BUILD_DIR)/%.o: $(libft_SRC_DIR)/%.c
-	$(CC) $(libft_INCLUDE_DIRS) -c $< -o $@
-	@echo $(libft_INCLUDE_DIRS)
-	@$(CC) $(libft_INCLUDE_DIRS) -MM -MT $@ $< >> .depend
+	$(CC) $(libft_CFLAGS) -c $< -o $@
+	@$(CC) $(libft_CFLAGS) -MM -MT $@ $< >> .depend
 	@sort -u .depend > .depend.tmp
 	@mv .depend.tmp .depend
 
