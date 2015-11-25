@@ -1,10 +1,9 @@
 ###########################################
-### Generic.mk by trapcodien@hotmail.fr ###
+#### Meta.mk by trapcodien@hotmail.fr #####
 ###########################################
 
 
-########### USER INFOS ######################
-
+### USER INFOS #################################################################
 OUT = a.out libft.a
 
 
@@ -18,14 +17,11 @@ a.out_LIBS =
 libft_INCLUDE_DIRS = include include2
 libft_SRC_DIR = src
 libft_SRCS = main.c a.c 
-
-libft_LIBS =
-
+################################################################################
 
 
-
-
-CFLAGS ?= -Wall -Wextra -std=c89 
+### USER FLAGS INTERACTIONS ####################################################
+CFLAGS ?= -Wall -Wextra -std=c89 -pedantic 
 
 EXTRA_DIR ?= extra
 LIB_DIR ?= lib
@@ -36,10 +32,12 @@ INCLUDE_DIR ?= include
 SRC_DIR ?= src
 
 ARFLAGS = rcs
+################################################################################
 
 
 
 
+################################################################################
 define generateVariables
   $$(foreach x,$$($(1)_LIBS),$$(eval $(1)_$$(x)_INCLUDE_DIRS ?= $$(INCLUDE_DIR)))
   $$(foreach x,$$($(1)_LIBS),$$(eval $(1)_$$(x)_LIB_DIR ?= $$(LIB_DIR)))
@@ -91,6 +89,7 @@ define autoCallVariables
 endef
 
 $(foreach x,$(OUT),$(eval $(call autoCallVariables,$(x))))
+################################################################################
 
 
 ### set a.out_LDFLAGS (libft, etc...) (+=)         LDFLAGS += foreach(x, libs, -L 1_x_LIB_DIR)
@@ -99,7 +98,7 @@ $(foreach x,$(OUT),$(eval $(call autoCallVariables,$(x))))
 ## set libft/lib/libft.a rule (make)               1_x_DIR/1_x_LIB_DIR/x.a :           =>         @make -C 1_x_DIR 1_x_LIB/x.a
 ## set variable :  a.out_LIBS_FULL = libft/lib/libft.a libtest/lib/libtest.a
 
-## 1_LIBS_FULL += foreach => 1_x_DIR/1_x_LIB_DIR/x.a
+## 1_LIBS_FULL += foreach => 1_x_DIR/1_x_LIB_DIR/x.a  
 
 
 
@@ -112,15 +111,16 @@ $(foreach x,$(OUT),$(eval $(call autoCallVariables,$(x))))
 
 
 
+################################################################################
 DIRS_TO_MAKE := $(sort $(DIRS_TO_MAKE))
 
-############################
-all: $(DIRS_TO_MAKE) $(OUT_FULL)
-#############################
-
+################################################################################
+all: $(DIRS_TO_MAKE) $(OUT_FULL) ###############################################
+################################################################################
 
 $(DIRS_TO_MAKE):
 	@mkdir -p $(@)
+################################################################################
 
 define generateRules
   $(1)_SRCS_FULL = $$(addprefix $$($(1)_SRC_DIR)/,$$($(1)_SRCS))
@@ -163,6 +163,7 @@ endif
   CLEAN_FULL += clean_$(1)
 endef
 
+################################################################################
 define autoCallRules
   ifeq ($$(suffix $(1)),.a)
     $$(eval $$(call generateRules,$$(basename $(1))))
@@ -172,6 +173,7 @@ define autoCallRules
 endef
 
 $(foreach x,$(OUT),$(eval $(call autoCallRules,$(x))))
+################################################################################
 
 
 cleanout: $(CLEANOUT_FULL)
@@ -184,5 +186,8 @@ fclean: clean cleanout
 
 re: fclean all
 
+################################################################################
+
 -include .depend
-.PHONY: all re clean fclean $(.PHONY)
+.PHONY: all re cleanout clean fclean $(.PHONY)
+
