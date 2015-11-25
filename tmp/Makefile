@@ -11,6 +11,8 @@ OUT = a.out libft.a
 a.out_INCLUDE_DIRS = include include2
 a.out_SRC_DIR = src
 a.out_SRCS = main.c a.c 
+a.out_BIN_DIR = .
+
 
 a.out_LIBS =
 
@@ -18,6 +20,7 @@ a.out_LIBS =
 libft_INCLUDE_DIRS = include include2
 libft_SRC_DIR = src
 libft_SRCS = main.c a.c 
+libft_LIB_DIR = .
 
 libft_LIBS =
 
@@ -72,7 +75,9 @@ endif
 $(1)_CFLAGS += $$(addprefix -I ,$$($(1)_INCLUDE_DIRS))
 $(1)_CFLAGS += $$(CFLAGS)
 
-BUILD_FULL += $$($(1)_SRC_DIR)/$$(BUILD_DIR)
+DIRS_TO_MAKE += $$($(1)_SRC_DIR)/$$(BUILD_DIR)
+DIRS_TO_MAKE += $$($(1)_LIB_DIR)
+DIRS_TO_MAKE += $$($(1)_BIN_DIR)
 
 endef
 
@@ -115,33 +120,27 @@ $(foreach x,$(OUT),$(eval $(call autoCallVariables,$(x))))
 
 
 
+
+DIRS_TO_MAKE := $(sort $(DIRS_TO_MAKE))
+
 ############################
-all: $(BUILD_FULL) $(OUT_FULL)
+all: $(DIRS_TO_MAKE) $(OUT_FULL)
+	@rmdir $(DIRS_TO_MAKE) 2> /dev/null || true
 #############################
 
+$(DIRS_TO_MAKE):
+	@mkdir -p $(@)
 
 #./libft/lib/libft.a:
 #	@make -C libft lib/libft.a
 
 define generateRules
-  $$($(1)_LIB_DIR):
-	@mkdir -p $$($(1)_LIB_DIR)
-
-  $$($(1)_BIN_DIR):
-	@mkdir -p $$($(1)_BIN_DIR)
 
   $(1)_SRCS_FULL = $$(addprefix $$($(1)_SRC_DIR)/,$$($(1)_SRCS))
 
 
   $(1)_OBJS = $$($(1)_SRCS:.c=.o)
   $(1)_OBJS_FULL = $$(addprefix $$($(1)_SRC_DIR)/$$(BUILD_DIR)/,$$($(1)_OBJS))
-
-
-
-
-  $$($(1)_SRC_DIR)/$$(BUILD_DIR):
-	@mkdir -p $$($(1)_SRC_DIR)/$$(BUILD_DIR)
-
 
 
   $$($(1)_SRC_DIR)/$$(BUILD_DIR)/%.o: $$($(1)_SRC_DIR)/%.c
