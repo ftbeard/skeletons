@@ -11,7 +11,8 @@ a.out_SRC_DIR = src
 a.out_INCS = include include2
 a.out_SRCS = main.c a.c 
 
-a.out_LIBS =
+a.out_LIBS = libft
+a.out_libft_DIR = .
 
 
 libft_SRC_DIR = src
@@ -38,12 +39,12 @@ ARFLAGS = rcs
 
 
 
-
 ################################################################################
 define generateVariables
   $$(foreach x,$$($(1)_LIBS),$$(eval $(1)_$$(x)_INCS ?= $$(INCLUDE_DIR)))
   $$(foreach x,$$($(1)_LIBS),$$(eval $(1)_$$(x)_LIB_DIR ?= $$(LIB_DIR)))
   $$(foreach x,$$($(1)_LIBS),$$(eval $(1)_$$(x)_DIR ?= $$(x)))
+  $$(foreach x,$$($(1)_LIBS),$$(eval $(1)_$$(x)_NAME ?= $$(x).a))
   
   
   
@@ -72,6 +73,11 @@ define generateVariables
   endif
   
   $(1)_CFLAGS += $$(addprefix -I ,$$($(1)_INCS))
+
+  $(1)_LDFLAGS += $$(foreach elem,$$($(1)_LIBS),-L $$($(1)_$$(elem)_DIR)/$$($(1)_$$(elem)_LIB_DIR))
+  $(1)_LDLIBS += $$(foreach elem,$$($(1)_LIBS),$$(subst lib,-l,$$(elem)))
+
+  $(1)_LIBS_FULL = $$(foreach elem,$$($(1)_LIBS),$$($(1)_$$(elem)_DIR)/$$($(1)_$$(elem)_LIB_DIR)/$$($(1)_$$(elem)_NAME))
   
   DIRS_TO_MAKE += $$($(1)_SRC_DIR)/$$(BUILD_DIR)
   ifeq ($$(suffix $$($(1)_NAME)),.a)
@@ -98,8 +104,11 @@ $(foreach x,$(OUTPUTS),$(eval $(call autoCallVariables,$(x))))
 ### set a.out_LDFLAGS (libft, etc...) (+=)         LDFLAGS += foreach(x, libs, -L 1_x_LIB_DIR)
 ### set a.out_LDLIBS (libft, etc...) (+=)         LDLIBS += foreach(x, libs, -l$(subst lib,-l,x))
 
-## set libft/lib/libft.a rule (make)               1_x_DIR/1_x_LIB_DIR/x.a :           =>         @make -C 1_x_DIR 1_x_LIB/x.a
+
 ## set variable :  a.out_LIBS_FULL = libft/lib/libft.a libtest/lib/libtest.a
+
+
+## set libft/lib/libft.a rule (make)               1_x_DIR/1_x_LIB_DIR/x.a :           =>         @make -C 1_x_DIR 1_x_LIB/x.a
 
 ## 1_LIBS_FULL += foreach => 1_x_DIR/1_x_LIB_DIR/x.a  
 
