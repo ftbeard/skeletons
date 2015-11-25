@@ -11,7 +11,6 @@ OUT = a.out libft.a
 a.out_INCLUDE_DIRS = include include2
 a.out_SRC_DIR = src
 a.out_SRCS = main.c a.c 
-a.out_BIN_DIR = .
 
 
 a.out_LIBS =
@@ -20,7 +19,6 @@ a.out_LIBS =
 libft_INCLUDE_DIRS = include include2
 libft_SRC_DIR = src
 libft_SRCS = main.c a.c 
-libft_LIB_DIR = .
 
 libft_LIBS =
 
@@ -44,50 +42,53 @@ ARFLAGS = rcs
 
 
 define generateVariables
-
-$$(foreach x,$$($(1)_LIBS),$$(eval $(1)_$$(x)_INCLUDE_DIRS ?= $$(INCLUDE_DIR)))
-$$(foreach x,$$($(1)_LIBS),$$(eval $(1)_$$(x)_LIB_DIR ?= $$(LIB_DIR)))
-$$(foreach x,$$($(1)_LIBS),$$(eval $(1)_$$(x)_DIR ?= $$(x)))
-
-
-
-$(1)_LDFLAGS ?= $$(LDFLAGS)
-$(1)_LDLIBS ?= $$(LDLIBS)
-
-
-$(1)_NAME = $(2)
-
-$(1)_LIB_DIR ?= $$(LIB_DIR)
-$(1)_BIN_DIR ?= $$(BIN_DIR)
-$(1)_SRC_DIR ?= $$(SRC_DIR)
-$(1)_INCLUDE_DIRS ?= $$(INCLUDE_DIR)
-
-$$(foreach x,$$($(1)_LIBS),$$(eval $(1)_INCLUDE_DIRS += $$(addprefix $$($(1)_$$(x)_DIR)/,$$($(1)_$$(x)_INCLUDE_DIRS))))
-
-
-
-ifeq ($$(suffix $$($(1)_NAME)),.a)
-  OUT_FULL += $$($(1)_LIB_DIR)/$$($(1)_NAME)
-else
-  OUT_FULL += $$($(1)_BIN_DIR)/$$($(1)_NAME)
-endif
-
-$(1)_CFLAGS += $$(addprefix -I ,$$($(1)_INCLUDE_DIRS))
-$(1)_CFLAGS += $$(CFLAGS)
-
-DIRS_TO_MAKE += $$($(1)_SRC_DIR)/$$(BUILD_DIR)
-DIRS_TO_MAKE += $$($(1)_LIB_DIR)
-DIRS_TO_MAKE += $$($(1)_BIN_DIR)
-
+  $$(foreach x,$$($(1)_LIBS),$$(eval $(1)_$$(x)_INCLUDE_DIRS ?= $$(INCLUDE_DIR)))
+  $$(foreach x,$$($(1)_LIBS),$$(eval $(1)_$$(x)_LIB_DIR ?= $$(LIB_DIR)))
+  $$(foreach x,$$($(1)_LIBS),$$(eval $(1)_$$(x)_DIR ?= $$(x)))
+  
+  
+  
+  $(1)_LDFLAGS ?= $$(LDFLAGS)
+  $(1)_LDLIBS ?= $$(LDLIBS)
+  
+  
+  $(1)_NAME = $(2)
+  
+  
+  ifeq ($$(suffix $$($(1)_NAME)),.a)
+    $(1)_LIB_DIR ?= $$(LIB_DIR)
+  else
+    $(1)_BIN_DIR ?= $$(BIN_DIR)
+  endif
+  
+  $(1)_SRC_DIR ?= $$(SRC_DIR)
+  $(1)_INCLUDE_DIRS ?= $$(INCLUDE_DIR)
+  
+  $$(foreach x,$$($(1)_LIBS),$$(eval $(1)_INCLUDE_DIRS += $$(addprefix $$($(1)_$$(x)_DIR)/,$$($(1)_$$(x)_INCLUDE_DIRS))))
+  
+  
+  
+  ifeq ($$(suffix $$($(1)_NAME)),.a)
+    OUT_FULL += ./$$($(1)_LIB_DIR)/$$($(1)_NAME)
+  else
+    OUT_FULL += ./$$($(1)_BIN_DIR)/$$($(1)_NAME)
+  endif
+  
+  $(1)_CFLAGS += $$(addprefix -I ,$$($(1)_INCLUDE_DIRS))
+  $(1)_CFLAGS += $$(CFLAGS)
+  
+  DIRS_TO_MAKE += $$($(1)_SRC_DIR)/$$(BUILD_DIR)
+  DIRS_TO_MAKE += $$($(1)_LIB_DIR)
+  DIRS_TO_MAKE += $$($(1)_BIN_DIR)
 endef
 
 
 define autoCallVariables
-ifeq ($$(suffix $(1)),.a)
-$$(eval $$(call generateVariables,$$(basename $(1)),$(1)))
-else
-$$(eval $$(call generateVariables,$(1),$(1)))
-endif
+  ifeq ($$(suffix $(1)),.a)
+    $$(eval $$(call generateVariables,$$(basename $(1)),$(1)))
+  else
+    $$(eval $$(call generateVariables,$(1),$(1)))
+  endif
 endef
 
 $(foreach x,$(OUT),$(eval $(call autoCallVariables,$(x))))
@@ -116,21 +117,18 @@ DIRS_TO_MAKE := $(sort $(DIRS_TO_MAKE))
 
 ############################
 all: $(DIRS_TO_MAKE) $(OUT_FULL)
-	@rmdir $(DIRS_TO_MAKE) 2> /dev/null || true
 #############################
+
 
 $(DIRS_TO_MAKE):
 	@mkdir -p $(@)
-
 
 define generateRules
 
   $(1)_SRCS_FULL = $$(addprefix $$($(1)_SRC_DIR)/,$$($(1)_SRCS))
 
-
   $(1)_OBJS = $$($(1)_SRCS:.c=.o)
   $(1)_OBJS_FULL = $$(addprefix $$($(1)_SRC_DIR)/$$(BUILD_DIR)/,$$($(1)_OBJS))
-
 
   $$($(1)_SRC_DIR)/$$(BUILD_DIR)/%.o: $$($(1)_SRC_DIR)/%.c
 	$$(CC) $$($(1)_CFLAGS) -c $$< -o $$@
@@ -139,13 +137,13 @@ define generateRules
 	@mv .depend.tmp .depend
 
 
-ifeq ($$(suffix $$($(1)_NAME)),.a)
-  $$($(1)_LIB_DIR)/$$($(1)_NAME): $$($(1)_LIB_DIR) $$($(1)_OBJS_FULL)
-	$$(AR) $$(ARFLAGS) $$($(1)_LIB_DIR)/$$($(1)_NAME) $$($(1)_OBJS_FULL)
-else
-  $$($(1)_BIN_DIR)/$$($(1)_NAME): $$($(1)_BIN_DIR) $$($(1)_OBJS_FULL) $$($(1)_LIBS_FULL)
-	$$(CC) $$(CFLAGS) $$($(1)_LDFLAGS) $$($(1)_LDLIBS) $$($(1)_OBJS_FULL) -o $$($(1)_BIN_DIR)/$$($(1)_NAME)
-endif
+  ifeq ($$(suffix $$($(1)_NAME)),.a)
+    ./$$($(1)_LIB_DIR)/$$($(1)_NAME): $$($(1)_OBJS_FULL)
+		$$(AR) $$(ARFLAGS) ./$$($(1)_LIB_DIR)/$$($(1)_NAME) $$($(1)_OBJS_FULL)
+  else
+    ./$$($(1)_BIN_DIR)/$$($(1)_NAME): $$($(1)_OBJS_FULL) $$($(1)_LIBS_FULL)
+		$$(CC) $$(CFLAGS) $$($(1)_LDFLAGS) $$($(1)_LDLIBS) $$($(1)_OBJS_FULL) -o ./$$($(1)_BIN_DIR)/$$($(1)_NAME)
+  endif
 
 
   clean_$(1):
@@ -154,10 +152,10 @@ endif
 ifeq ($$(suffix $($(1)_NAME)),.a)
   cleanout_$(1):
 	@$$(RM) $$($(1)_LIB_DIR)/$$($(1)_NAME)
-	@rmdir $$($(1)_LIB_DIR) 2> /dev/null || true
+	@rmdir ./$$($(1)_LIB_DIR) 2> /dev/null || true
 else
   cleanout_$(1):
-	@$$(RM) $$($(1)_BIN_DIR)/$$($(1)_NAME)
+	@$$(RM) ./$$($(1)_BIN_DIR)/$$($(1)_NAME)
 	@rmdir $$($(1)_BIN_DIR) 2> /dev/null || true
 endif
 
