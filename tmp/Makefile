@@ -55,7 +55,7 @@ $(1)_LDFLAGS ?= $$(LDFLAGS)
 $(1)_LDLIBS ?= $$(LDLIBS)
 
 
-$(1)_NAME = $(2) ### TODO
+$(1)_NAME = $(2)
 
 $(1)_LIB_DIR ?= $$(LIB_DIR)
 $(1)_BIN_DIR ?= $$(BIN_DIR)
@@ -92,21 +92,14 @@ endef
 
 $(foreach x,$(OUT),$(eval $(call autoCallVariables,$(x))))
 
-#$(info $(call autoCall,a.out))
 
-#$(eval $(call generateVariables,libf,libft.a))
+### set a.out_LDFLAGS (libft, etc...) (+=)         LDFLAGS += foreach(x, libs, -L 1_x_LIB_DIR)
+### set a.out_LDLIBS (libft, etc...) (+=)         LDLIBS += foreach(x, libs, -l$(subst lib,-l,x))
 
-#$(foreach x,$(OUT),$(eval $(call generateVariables,$(call filterName,$(x)),$(x))))
-
-#$(foreach x,$(OUT),$(eval $(call libft,libft.a)))
-
-#$(foreach x,$(OUT),$(eval $(call generateVariables, $(call filterName,$(x)),$(x))))
-
-### set a.out_LDFLAGS (libft, etc...) (+=)
-### set a.out_LDLIBS (libft, etc...) (+=)
-
-## set libft/lib/libft.a rule (make)
+## set libft/lib/libft.a rule (make)               1_x_DIR/1_x_LIB_DIR/x.a :           =>         @make -C 1_x_DIR 1_x_LIB/x.a
 ## set variable :  a.out_LIBS_FULL = libft/lib/libft.a libtest/lib/libtest.a
+
+## 1_LIBS_FULL += foreach => 1_x_DIR/1_x_LIB_DIR/x.a
 
 
 
@@ -115,8 +108,6 @@ $(foreach x,$(OUT),$(eval $(call autoCallVariables,$(x))))
 
 #OUT_NAME = $(basename $(OUT))
 #OUT_FULL = $(addprefix $(LIB_DIR)/,$(OUT))
-
-### TODO
 
 
 
@@ -131,8 +122,6 @@ all: $(DIRS_TO_MAKE) $(OUT_FULL)
 $(DIRS_TO_MAKE):
 	@mkdir -p $(@)
 
-#./libft/lib/libft.a:
-#	@make -C libft lib/libft.a
 
 define generateRules
 
@@ -200,5 +189,4 @@ fclean: clean cleanout
 re: fclean all
 
 -include .depend
-
 .PHONY: all re clean fclean $(.PHONY)
