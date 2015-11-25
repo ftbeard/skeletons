@@ -2,6 +2,29 @@
 ### Generic.mk by trapcodien@hotmail.fr ###
 ###########################################
 
+
+########### USER INFOS ######################
+
+OUT = a.out libft.a
+
+
+a.out_INCLUDE_DIRS = include include2
+a.out_SRC_DIR = src
+a.out_SRCS = main.c a.c 
+
+a.out_LIBS =
+
+
+libft_INCLUDE_DIRS = include include2
+libft_SRC_DIR = src
+libft_SRCS = main.c a.c 
+
+libft_LIBS =
+
+
+
+
+
 CFLAGS = -Wall -Wextra
 
 EXTRA_DIR ?= extra
@@ -16,28 +39,63 @@ ARFLAGS = rcs
 
 
 
-########### USER INFOS ######################
 
-OUT = a.out
+define generateVariables
 
-
-a.out_INCLUDE_DIRS = include include2
-a.out_SRC_DIR = src
-a.out_LIB_DIR = .
-a.out_BIN_DIR = .
-a.out_SRCS = main.c a.c 
-
-
-a.out_LIBS = libft
-
-$(foreach x,$(a.out_LIBS),$(eval a.out_$(x)_INCLUDE_DIRS ?= $(INCLUDE_DIR)))
-$(foreach x,$(a.out_LIBS),$(eval a.out_$(x)_LIB_DIR ?= $(LIB_DIR)))
-$(foreach x,$(a.out_LIBS),$(eval a.out_$(x)_DIR ?= $(x)))
+$$(foreach x,$$($(1)_LIBS),$$(eval $(1)_$$(x)_INCLUDE_DIRS ?= $$(INCLUDE_DIR)))
+$$(foreach x,$$($(1)_LIBS),$$(eval $(1)_$$(x)_LIB_DIR ?= $$(LIB_DIR)))
+$$(foreach x,$$($(1)_LIBS),$$(eval $(1)_$$(x)_DIR ?= $$(x)))
 
 
 
-a.out_LDFLAGS ?= $(LDFLAGS)
-a.out_LDLIBS ?= $(LDLIBS)
+$(1)_LDFLAGS ?= $$(LDFLAGS)
+$(1)_LDLIBS ?= $$(LDLIBS)
+
+
+$(1)_NAME = $(2) ### TODO
+
+$(1)_LIB_DIR ?= $$(LIB_DIR)
+$(1)_BIN_DIR ?= $$(BIN_DIR)
+$(1)_SRC_DIR ?= $$(SRC_DIR)
+$(1)_INCLUDE_DIRS ?= $$(INCLUDE_DIR)
+
+$$(foreach x,$$($(1)_LIBS),$$(eval $(1)_INCLUDE_DIRS += $$(addprefix $$($(1)_$$(x)_DIR)/,$$($(1)_$$(x)_INCLUDE_DIRS))))
+
+
+
+ifeq ($$(suffix $$($(1)_NAME)),.a)
+  OUT_FULL += $$($(1)_LIB_DIR)/$$($(1)_NAME)
+else
+  OUT_FULL += $$($(1)_BIN_DIR)/$$($(1)_NAME)
+endif
+
+$(1)_CFLAGS += $$(addprefix -I ,$$($(1)_INCLUDE_DIRS))
+$(1)_CFLAGS += $$(CFLAGS)
+
+BUILD_FULL += $$($(1)_SRC_DIR)/$$(BUILD_DIR)
+
+endef
+
+
+define autoCallVariables
+ifeq ($$(suffix $(1)),.a)
+$$(eval $$(call generateVariables,$$(basename $(1)),$(1)))
+else
+$$(eval $$(call generateVariables,$(1),$(1)))
+endif
+endef
+
+$(foreach x,$(OUT),$(eval $(call autoCallVariables,$(x))))
+
+#$(info $(call autoCall,a.out))
+
+#$(eval $(call generateVariables,libf,libft.a))
+
+#$(foreach x,$(OUT),$(eval $(call generateVariables,$(call filterName,$(x)),$(x))))
+
+#$(foreach x,$(OUT),$(eval $(call libft,libft.a)))
+
+#$(foreach x,$(OUT),$(eval $(call generateVariables, $(call filterName,$(x)),$(x))))
 
 ### set a.out_LDFLAGS (libft, etc...) (+=)
 ### set a.out_LDLIBS (libft, etc...) (+=)
@@ -46,26 +104,6 @@ a.out_LDLIBS ?= $(LDLIBS)
 ## set variable :  a.out_LIBS_FULL = libft/lib/libft.a libtest/lib/libtest.a
 
 
-a.out_NAME = $(OUT) ### TODO
-
-a.out_LIB_DIR ?= $(LIB_DIR)
-a.out_BIN_DIR ?= $(BIN_DIR)
-a.out_SRC_DIR ?= $(SRC_DIR)
-a.out_INCLUDE_DIRS ?= $(INCLUDE_DIR)
-
-$(foreach x,$(a.out_LIBS),$(eval a.out_INCLUDE_DIRS += $(addprefix $(a.out_$(x)_DIR)/,$(a.out_$(x)_INCLUDE_DIRS))))
-
-
-
-ifeq ($(suffix $(a.out_NAME)),.a)
-  OUT_FULL += $(a.out_LIB_DIR)/$(a.out_NAME)
-else
-  OUT_FULL += $(a.out_BIN_DIR)/$(a.out_NAME)
-  a.out_OUT := ## Why ?  
-endif
-
-a.out_CFLAGS += $(addprefix -I ,$(a.out_INCLUDE_DIRS))
-a.out_CFLAGS += $(CFLAGS)
 
 
 ########### Common.mk #######################
@@ -74,72 +112,86 @@ a.out_CFLAGS += $(CFLAGS)
 #OUT_FULL = $(addprefix $(LIB_DIR)/,$(OUT))
 
 ### TODO
-BUILD_FULL += $(a.out_SRC_DIR)/$(BUILD_DIR)
 
 
 
 ############################
 all: $(BUILD_FULL) $(OUT_FULL)
-
-$(LIB_DIR):
-	@mkdir -p $(LIB_DIR)
-
-$(BIN_DIR):
-	@mkdir -p $(BIN_DIR)
 #############################
 
 
 #./libft/lib/libft.a:
 #	@make -C libft lib/libft.a
 
+define generateRules
+  $$($(1)_LIB_DIR):
+	@mkdir -p $$($(1)_LIB_DIR)
+
+  $$($(1)_BIN_DIR):
+	@mkdir -p $$($(1)_BIN_DIR)
+
+  $(1)_SRCS_FULL = $$(addprefix $$($(1)_SRC_DIR)/,$$($(1)_SRCS))
 
 
-a.out_SRCS_FULL = $(addprefix $(a.out_SRC_DIR)/,$(a.out_SRCS))
-
-a.out_OBJS = $(a.out_SRCS:.c=.o)
-a.out_OBJS_FULL = $(addprefix $(a.out_SRC_DIR)/$(BUILD_DIR)/,$(a.out_OBJS))
-
-
-$(a.out_SRC_DIR)/$(BUILD_DIR):
-	@mkdir -p $(a.out_SRC_DIR)/$(BUILD_DIR)
+  $(1)_OBJS = $$($(1)_SRCS:.c=.o)
+  $(1)_OBJS_FULL = $$(addprefix $$($(1)_SRC_DIR)/$$(BUILD_DIR)/,$$($(1)_OBJS))
 
 
 
-$(a.out_SRC_DIR)/$(BUILD_DIR)/%.o: $(a.out_SRC_DIR)/%.c
-	$(CC) $(a.out_CFLAGS) -c $< -o $@
-	@$(CC) $(a.out_CFLAGS) -MM -MT $@ $< >> .depend
+
+  $$($(1)_SRC_DIR)/$$(BUILD_DIR):
+	@mkdir -p $$($(1)_SRC_DIR)/$$(BUILD_DIR)
+
+
+
+  $$($(1)_SRC_DIR)/$$(BUILD_DIR)/%.o: $$($(1)_SRC_DIR)/%.c
+	$$(CC) $$($(1)_CFLAGS) -c $$< -o $$@
+	@$$(CC) $$($(1)_CFLAGS) -MM -MT $$@ $$< >> .depend
 	@sort -u .depend > .depend.tmp
 	@mv .depend.tmp .depend
 
 
-ifeq ($(suffix $(a.out_NAME)),.a)
-$(a.out_LIB_DIR)/$(a.out_NAME): $(a.out_LIB_DIR) $(a.out_OBJS_FULL)
-	$(AR) $(ARFLAGS) $(a.out_LIB_DIR)/$(a.out_NAME) $(a.out_OBJS_FULL)
+ifeq ($$(suffix $$($(1)_NAME)),.a)
+  $$($(1)_LIB_DIR)/$$($(1)_NAME): $$($(1)_LIB_DIR) $$($(1)_OBJS_FULL)
+	$$(AR) $$(ARFLAGS) $$($(1)_LIB_DIR)/$$($(1)_NAME) $$($(1)_OBJS_FULL)
 else
-$(a.out_BIN_DIR)/$(a.out_NAME): $(a.out_BIN_DIR) $(a.out_OBJS_FULL) $(a.out_LIBS_FULL)
-	$(CC) $(CFLAGS) $(a.out_LDFLAGS) $(a.out_LDLIBS) $(a.out_OBJS_FULL) -o $(a.out_BIN_DIR)/$(a.out_NAME)
+  $$($(1)_BIN_DIR)/$$($(1)_NAME): $$($(1)_BIN_DIR) $$($(1)_OBJS_FULL) $$($(1)_LIBS_FULL)
+	$$(CC) $$(CFLAGS) $$($(1)_LDFLAGS) $$($(1)_LDLIBS) $$($(1)_OBJS_FULL) -o $$($(1)_BIN_DIR)/$$($(1)_NAME)
 endif
 
 
+  clean_$(1):
+	@$$(RM) -r $$($(1)_SRC_DIR)/$$(BUILD_DIR)
 
-clean_a.out:
-	@$(RM) -r $(a.out_SRC_DIR)/$(BUILD_DIR)
-
-ifeq ($(suffix $(a.out_NAME)),.a)
-cleanout_a.out:
-	@$(RM) $(a.out_LIB_DIR)/$(a.out_NAME)
-	@rmdir $(a.out_LIB_DIR) 2> /dev/null || true
+ifeq ($$(suffix $($(1)_NAME)),.a)
+  cleanout_$(1):
+	@$$(RM) $$($(1)_LIB_DIR)/$$($(1)_NAME)
+	@rmdir $$($(1)_LIB_DIR) 2> /dev/null || true
 else
-cleanout_a.out:
-	@$(RM) $(a.out_BIN_DIR)/$(a.out_NAME)
-	@rmdir $(a.out_BIN_DIR) 2> /dev/null || true
+  cleanout_$(1):
+	@$$(RM) $$($(1)_BIN_DIR)/$$($(1)_NAME)
+	@rmdir $$($(1)_BIN_DIR) 2> /dev/null || true
 endif
 
-.PHONY += clean_a.out cleanout_a.out
+  .PHONY += clean_$(1) cleanout_$(1)
+
+  CLEANOUT_FULL += cleanout_$(1)
+  CLEAN_FULL += clean_$(1)
+endef
+
+define autoCallRules
+  ifeq ($$(suffix $(1)),.a)
+    $$(eval $$(call generateRules,$$(basename $(1))))
+  else
+    $$(eval $$(call generateRules,$(1)))
+  endif
+endef
+
+$(foreach x,$(OUT),$(eval $(call autoCallRules,$(x))))
 
 
-cleanout: cleanout_a.out
-clean: clean_a.out
+cleanout: $(CLEANOUT_FULL)
+clean: $(CLEAN_FULL)
 	@echo ---- CLEAN ----
 	@$(RM) .depend
 
@@ -148,15 +200,6 @@ fclean: clean cleanout
 
 re: fclean all
 
-
-#.depend: $(a.out_SRCS_FULL) ### TODO: ALL_SRCS ?
-#	@echo --- Create dependencies ---
-#	@$(RM) $@
-#	@#echo -----------------------  ---
-#	@echo ----------------------- $(join $(addsuffix .build/,$(dir $^)),$(notdir $(^:.c=.o))) ---
-#	$(CC) $(INCLUDE_DIR_LIST) -MM -MT src/.build/main.o -MM -MT src/.build/a.o $^ > $@ || $(RM) $@ 
-
 -include .depend
-
 
 .PHONY: all re clean fclean $(.PHONY)
