@@ -20,6 +20,7 @@ libft_SRCS = main.c a.c
 ################################################################################
 
 
+
 ### USER FLAGS INTERACTIONS ####################################################
 CFLAGS ?= -Wall -Wextra -std=c89 -pedantic 
 
@@ -53,11 +54,8 @@ define generateVariables
   $(1)_NAME = $(2)
   
   
-  ifeq ($$(suffix $$($(1)_NAME)),.a)
-    $(1)_LIB_DIR ?= $$(LIB_DIR)
-  else
-    $(1)_BIN_DIR ?= $$(BIN_DIR)
-  endif
+  $(1)_LIB_DIR ?= $$(LIB_DIR)
+  $(1)_BIN_DIR ?= $$(BIN_DIR)
   
   $(1)_SRC_DIR ?= $$(SRC_DIR)
   $(1)_INCLUDE_DIRS ?= $$(INCLUDE_DIR)
@@ -75,8 +73,12 @@ define generateVariables
   $(1)_CFLAGS += $$(addprefix -I ,$$($(1)_INCLUDE_DIRS))
   
   DIRS_TO_MAKE += $$($(1)_SRC_DIR)/$$(BUILD_DIR)
-  DIRS_TO_MAKE += $$($(1)_LIB_DIR)
-  DIRS_TO_MAKE += $$($(1)_BIN_DIR)
+  ifeq ($$(suffix $$($(1)_NAME)),.a)
+    DIRS_TO_MAKE += $$($(1)_LIB_DIR)
+  else
+    DIRS_TO_MAKE += $$($(1)_BIN_DIR)
+  endif
+
 endef
 
 
