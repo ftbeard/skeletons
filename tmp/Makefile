@@ -12,7 +12,6 @@ a.out_INCLUDE_DIRS = include include2
 a.out_SRC_DIR = src
 a.out_SRCS = main.c a.c 
 
-
 a.out_LIBS =
 
 
@@ -26,7 +25,7 @@ libft_LIBS =
 
 
 
-CFLAGS = -Wall -Wextra
+CFLAGS ?= -Wall -Wextra -std=c89 
 
 EXTRA_DIR ?= extra
 LIB_DIR ?= lib
@@ -48,8 +47,9 @@ define generateVariables
   
   
   
-  $(1)_LDFLAGS ?= $$(LDFLAGS)
+  $(1)_LDFLAGS ?= $$(LDFLAGS) $$(CFLAGS)
   $(1)_LDLIBS ?= $$(LDLIBS)
+  $(1)_CFLAGS ?= $$(CFLAGS)
   
   
   $(1)_NAME = $(2)
@@ -75,7 +75,6 @@ define generateVariables
   endif
   
   $(1)_CFLAGS += $$(addprefix -I ,$$($(1)_INCLUDE_DIRS))
-  $(1)_CFLAGS += $$(CFLAGS)
   
   DIRS_TO_MAKE += $$($(1)_SRC_DIR)/$$(BUILD_DIR)
   DIRS_TO_MAKE += $$($(1)_LIB_DIR)
@@ -124,7 +123,6 @@ $(DIRS_TO_MAKE):
 	@mkdir -p $(@)
 
 define generateRules
-
   $(1)_SRCS_FULL = $$(addprefix $$($(1)_SRC_DIR)/,$$($(1)_SRCS))
 
   $(1)_OBJS = $$($(1)_SRCS:.c=.o)
@@ -142,7 +140,7 @@ define generateRules
 		$$(AR) $$(ARFLAGS) ./$$($(1)_LIB_DIR)/$$($(1)_NAME) $$($(1)_OBJS_FULL)
   else
     ./$$($(1)_BIN_DIR)/$$($(1)_NAME): $$($(1)_OBJS_FULL) $$($(1)_LIBS_FULL)
-		$$(CC) $$(CFLAGS) $$($(1)_LDFLAGS) $$($(1)_LDLIBS) $$($(1)_OBJS_FULL) -o ./$$($(1)_BIN_DIR)/$$($(1)_NAME)
+		$$(CC) $$($(1)_LDFLAGS) $$($(1)_LDLIBS) $$($(1)_OBJS_FULL) -o ./$$($(1)_BIN_DIR)/$$($(1)_NAME)
   endif
 
 
