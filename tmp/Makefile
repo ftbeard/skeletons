@@ -78,14 +78,6 @@ define generateVariables
   $(1)_LDLIBS += $$(foreach elem,$$($(1)_LIBS),$$(subst lib,-l,$$(elem)))
 
   $(1)_LIBS_FULL = $$(foreach elem,$$($(1)_LIBS),$$($(1)_$$(elem)_DIR)/$$($(1)_$$(elem)_LIB_DIR)/$$($(1)_$$(elem)_NAME))
-  
-  DIRS_TO_MAKE += $$($(1)_SRC_DIR)/$$(BUILD_DIR)
-  ifeq ($$(suffix $$($(1)_NAME)),.a)
-    DIRS_TO_MAKE += $$($(1)_LIB_DIR)
-  else
-    DIRS_TO_MAKE += $$($(1)_BIN_DIR)
-  endif
-
 endef
 
 
@@ -122,16 +114,15 @@ $(foreach x,$(OUTPUTS),$(eval $(call autoCallVariables,$(x))))
 
 
 
+################################################################################
+#DIRS_TO_MAKE := $(sort $(DIRS_TO_MAKE))
 
 ################################################################################
-DIRS_TO_MAKE := $(sort $(DIRS_TO_MAKE))
-
-################################################################################
-all: $(DIRS_TO_MAKE) $(OUTPUTS_FULL) ###############################################
+all: $(OUTPUTS_FULL) ###########################################################
 ################################################################################
 
-$(DIRS_TO_MAKE):
-	@mkdir -p $(@)
+#$(DIRS_TO_MAKE):
+#	@mkdir -p $(@)
 ################################################################################
 
 define generateRules
@@ -141,6 +132,7 @@ define generateRules
   $(1)_OBJS_FULL = $$(addprefix $$($(1)_SRC_DIR)/$$(BUILD_DIR)/,$$($(1)_OBJS))
 
   $$($(1)_SRC_DIR)/$$(BUILD_DIR)/%.o: $$($(1)_SRC_DIR)/%.c
+	mkdir -p $$($(1)_SRC_DIR)/$$(BUILD_DIR)
 	$$(CC) $$($(1)_CFLAGS) -c $$< -o $$@
 	@$$(CC) $$($(1)_CFLAGS) -MM -MT $$@ $$< >> .depend
 	@sort -u .depend > .depend.tmp
@@ -149,9 +141,11 @@ define generateRules
 
   ifeq ($$(suffix $$($(1)_NAME)),.a)
     ./$$($(1)_LIB_DIR)/$$($(1)_NAME): $$($(1)_OBJS_FULL)
+		mkdir -p $$($(1)_LIB_DIR)
 		$$(AR) $$(ARFLAGS) ./$$($(1)_LIB_DIR)/$$($(1)_NAME) $$($(1)_OBJS_FULL)
   else
     ./$$($(1)_BIN_DIR)/$$($(1)_NAME): $$($(1)_OBJS_FULL) $$($(1)_LIBS_FULL)
+		mkdir -p $$($(1)_BIN_DIR)
 		$$(CC) $$($(1)_LDFLAGS) $$($(1)_LDLIBS) $$($(1)_OBJS_FULL) -o ./$$($(1)_BIN_DIR)/$$($(1)_NAME)
   endif
 
@@ -202,4 +196,5 @@ re: fclean all
 
 -include .depend
 .PHONY: all re cleanout clean fclean $(.PHONY)
+
 
