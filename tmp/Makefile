@@ -4,26 +4,28 @@
 
 
 ### USER INFOS #################################################################
-OUTPUTS = a.out libft.a
-
+OUTPUTS = a.out
 
 a.out_SRC_DIR = src
 a.out_INCS = include include2
-a.out_SRCS = main.c a.c 
+a.out_SRCS = main.c a.c
 
-a.out_LIBS = libft
-a.out_libft_DIR = .
+a.out_LIBS = 
 
 
 libft_SRC_DIR = src
 libft_INCS = include include2
-libft_SRCS = main.c a.c 
+libft_SRCS = main.c a.c
 ################################################################################
 
 
 
 ### USER FLAGS INTERACTIONS ####################################################
 CFLAGS ?= -Wall -Wextra -std=c89 -pedantic 
+DEBUG_FLAGS ?= -g
+
+VALGRIND_FLAGS ?= --dsymutil=yes --leak-check=full
+VALGRIND := valgrind $(VALGRIND_FLAGS)
 
 EXTRA_DIR ?= extra
 LIB_DIR ?= lib
@@ -65,7 +67,6 @@ define generateVariables
   $$(foreach x,$$($(1)_LIBS),$$(eval $(1)_INCS += $$(addprefix $$($(1)_$$(x)_DIR)/,$$($(1)_$$(x)_INCS))))
   
   
-  
   ifeq ($$(suffix $$($(1)_NAME)),.a)
     OUTPUTS_FULL += ./$$($(1)_LIB_DIR)/$$($(1)_NAME)
   else
@@ -80,7 +81,7 @@ define generateVariables
   $(1)_LIBS_FULL = $$(foreach elem,$$($(1)_LIBS),$$($(1)_$$(elem)_DIR)/$$($(1)_$$(elem)_LIB_DIR)/$$($(1)_$$(elem)_NAME))
 endef
 
-
+################################################################################
 define autoCallVariables
   ifeq ($$(suffix $(1)),.a)
     $$(eval $$(call generateVariables,$$(basename $(1)),$(1)))
@@ -90,39 +91,21 @@ define autoCallVariables
 endef
 
 $(foreach x,$(OUTPUTS),$(eval $(call autoCallVariables,$(x))))
-################################################################################
-
-
-### set a.out_LDFLAGS (libft, etc...) (+=)         LDFLAGS += foreach(x, libs, -L 1_x_LIB_DIR)
-### set a.out_LDLIBS (libft, etc...) (+=)         LDLIBS += foreach(x, libs, -l$(subst lib,-l,x))
-
-
-## set variable :  a.out_LIBS_FULL = libft/lib/libft.a libtest/lib/libtest.a
-
-
-## set libft/lib/libft.a rule (make)               1_x_DIR/1_x_LIB_DIR/x.a :           =>         @make -C 1_x_DIR 1_x_LIB/x.a
-
-## 1_LIBS_FULL += foreach => 1_x_DIR/1_x_LIB_DIR/x.a  
-
-
-
-
-########### Common.mk #######################
-
-#OUTPUTS_NAME = $(basename $(OUTPUTS))
-#OUTPUTS_FULL = $(addprefix $(LIB_DIR)/,$(OUTPUTS))
-
-
-
-################################################################################
-#DIRS_TO_MAKE := $(sort $(DIRS_TO_MAKE))
 
 ################################################################################
 all: $(OUTPUTS_FULL) ###########################################################
 ################################################################################
 
-#$(DIRS_TO_MAKE):
-#	@mkdir -p $(@)
+define makeLib
+  ifeq ($$(filter $$($(1)_$(2)_NAME),$$(OUTPUTS)),) 
+  ifeq ($$(shell pwd),$$(realpath $$($(1)_$(2)_DIR)))
+    $$(error Error: Maybe you forgotten $$($(1)_$(2)_NAME) in OUTPUTS var)
+  endif
+    $$($(1)_$(2)_DIR)/$$($(1)_$(2)_LIB_DIR)/$$($(1)_$(2)_NAME):
+		@make -C $$($(1)_$(2)_DIR) $$($(1)_$(3)_LIB_DIR)/$$($(1)_$(2)_NAME)
+  endif
+endef
+
 ################################################################################
 
 define generateRules
@@ -132,7 +115,7 @@ define generateRules
   $(1)_OBJS_FULL = $$(addprefix $$($(1)_SRC_DIR)/$$(BUILD_DIR)/,$$($(1)_OBJS))
 
   $$($(1)_SRC_DIR)/$$(BUILD_DIR)/%.o: $$($(1)_SRC_DIR)/%.c
-	mkdir -p $$($(1)_SRC_DIR)/$$(BUILD_DIR)
+	@mkdir -p $$($(1)_SRC_DIR)/$$(BUILD_DIR)
 	$$(CC) $$($(1)_CFLAGS) -c $$< -o $$@
 	@$$(CC) $$($(1)_CFLAGS) -MM -MT $$@ $$< >> .depend
 	@sort -u .depend > .depend.tmp
@@ -141,14 +124,14 @@ define generateRules
 
   ifeq ($$(suffix $$($(1)_NAME)),.a)
     ./$$($(1)_LIB_DIR)/$$($(1)_NAME): $$($(1)_OBJS_FULL)
-		mkdir -p $$($(1)_LIB_DIR)
+		@mkdir -p $$($(1)_LIB_DIR)
 		$$(AR) $$(ARFLAGS) ./$$($(1)_LIB_DIR)/$$($(1)_NAME) $$($(1)_OBJS_FULL)
   else
     ./$$($(1)_BIN_DIR)/$$($(1)_NAME): $$($(1)_OBJS_FULL) $$($(1)_LIBS_FULL)
-		mkdir -p $$($(1)_BIN_DIR)
+		@mkdir -p $$($(1)_BIN_DIR)
 		$$(CC) $$($(1)_LDFLAGS) $$($(1)_LDLIBS) $$($(1)_OBJS_FULL) -o ./$$($(1)_BIN_DIR)/$$($(1)_NAME)
+    $$(foreach x,$$($(1)_LIBS),$$(eval $$(call makeLib,$(1),$$(x))))
   endif
-
 
   clean_$(1):
 	@$$(RM) -r $$($(1)_SRC_DIR)/$$(BUILD_DIR)
