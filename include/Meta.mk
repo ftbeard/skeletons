@@ -3,17 +3,6 @@
 ###########################################
 
 
-### USER INFOS #################################################################
-OUTPUTS = libft.a
-
-libft_SRC_DIR = .
-libft_INCS =
-libft_SRCS = libft.c
-
-################################################################################
-
-
-
 ### USER FLAGS INTERACTIONS ####################################################
 CFLAGS ?= -Wall -Wextra -std=c89 -pedantic 
 DEBUG_FLAGS ?= -g
@@ -30,9 +19,13 @@ INCLUDE_DIR ?= include
 SRC_DIR ?= src
 
 ARFLAGS = rcs
+
+
+ifeq ($(DEBUG),1)
+  CFLAGS += $(DEBUG_FLAGS)
+  PRE_EXEC ?= $(VALGRIND)
+endif
 ################################################################################
-
-
 
 
 ################################################################################
@@ -42,13 +35,14 @@ define generateVariables
   $$(foreach x,$$($(1)_LIBS),$$(eval $(1)_$$(x)_DIR ?= $$(x)))
   $$(foreach x,$$($(1)_LIBS),$$(eval $(1)_$$(x)_NAME ?= $$(x).a))
   
+
   
   
   $(1)_LDFLAGS ?= $$(LDFLAGS) $$(CFLAGS)
   $(1)_LDLIBS ?= $$(LDLIBS)
   $(1)_CFLAGS ?= $$(CFLAGS)
-  
-  
+
+  $(1)_ARGS ?= $$(ARGS)
   $(1)_NAME = $(2)
   
   
@@ -57,8 +51,10 @@ define generateVariables
   
   $(1)_SRC_DIR ?= $$(SRC_DIR)
   $(1)_INCS ?= $$(INCLUDE_DIR)
+
   
   $$(foreach x,$$($(1)_LIBS),$$(eval $(1)_INCS += $$(addprefix $$($(1)_$$(x)_DIR)/,$$($(1)_$$(x)_INCS))))
+
   
   
   ifeq ($$(suffix $$($(1)_NAME)),.a)
@@ -68,6 +64,7 @@ define generateVariables
   endif
   
   $(1)_CFLAGS += $$(addprefix -I ,$$($(1)_INCS))
+
 
   $(1)_LDFLAGS += $$(foreach elem,$$($(1)_LIBS),-L $$($(1)_$$(elem)_DIR)/$$($(1)_$$(elem)_LIB_DIR))
   $(1)_LDLIBS += $$(foreach elem,$$($(1)_LIBS),$$(subst lib,-l,$$(elem)))
@@ -101,17 +98,29 @@ define makeLib
 endef
 
 define cleanLib
+  ifeq ($$(filter $$($(1)_$(2)_NAME),$$(OUTPUTS)),) 
+  ifeq ($$(shell pwd),$$(realpath $$($(1)_$(2)_DIR)))
+    $$(error Error: Maybe you forgotten $$($(1)_$(2)_NAME) in OUTPUTS var)
+  endif
   clean_$(1)_$(2):
+		@echo -n ---
 		@make -C $$($(1)_$(2)_DIR) clean
   .PHONY += clean_$(1)_$(2)
   CLEAN_FULL += clean_$(1)_$(2)
+  endif
 endef
 
 define cleanoutLib
+  ifeq ($$(filter $$($(1)_$(2)_NAME),$$(OUTPUTS)),) 
+  ifeq ($$(shell pwd),$$(realpath $$($(1)_$(2)_DIR)))
+    $$(error Error: Maybe you forgotten $$($(1)_$(2)_NAME) in OUTPUTS var)
+  endif
   cleanout_$(1)_$(2):
+		@echo -n ---
 		@make -C $$($(1)_$(2)_DIR) cleanout
   .PHONY += cleanout_$(1)_$(2)
   CLEAN_FULL += cleanout_$(1)_$(2)
+  endif
 endef
 
 ################################################################################
@@ -124,6 +133,7 @@ define generateRules
 
   $$($(1)_SRC_DIR)/$$(BUILD_DIR)/%.o: $$($(1)_SRC_DIR)/%.c
 	@mkdir -p $$($(1)_SRC_DIR)/$$(BUILD_DIR)
+	@echo $(1)
 	$$(CC) $$($(1)_CFLAGS) -c $$< -o $$@
 	@$$(CC) $$($(1)_CFLAGS) -MM -MT $$@ $$< >> .depend
 	@sort -u .depend > .depend.tmp
@@ -156,7 +166,14 @@ else
   cleanout_$(1):
 	@echo --- Clean $$($(1)_NAME)
 	@$$(RM) ./$$($(1)_BIN_DIR)/$$($(1)_NAME)
+	@$$(RM) -r ./$$($(1)_BIN_DIR)/$$($(1)_NAME).dSYM
 	@rmdir $$($(1)_BIN_DIR) 2> /dev/null || true
+
+  test_$(1): ./$$($(1)_BIN_DIR)/$$($(1)_NAME)
+		$$(PRE_EXEC) ./$$($(1)_BIN_DIR)/$$($(1)_NAME) $$($(1)_ARGS)
+
+  .PHONY += test_$(1)
+
 endif
 
   .PHONY += clean_$(1) cleanout_$(1)
