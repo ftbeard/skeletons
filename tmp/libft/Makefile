@@ -4,13 +4,12 @@
 
 
 ### USER INFOS #################################################################
-OUTPUTS = a.out
+OUTPUTS = libft.a
 
-a.out_SRC_DIR = src
-a.out_INCS = include include2
-a.out_SRCS = main.c a.c
+libft_SRC_DIR = .
+libft_INCS =
+libft_SRCS = libft.c
 
-a.out_LIBS = libft
 ################################################################################
 
 
@@ -103,7 +102,6 @@ endef
 
 define cleanLib
   clean_$(1)_$(2):
-		@echo -n ---
 		@make -C $$($(1)_$(2)_DIR) clean
   .PHONY += clean_$(1)_$(2)
   CLEAN_FULL += clean_$(1)_$(2)
@@ -111,7 +109,6 @@ endef
 
 define cleanoutLib
   cleanout_$(1)_$(2):
-		@echo -n ---
 		@make -C $$($(1)_$(2)_DIR) cleanout
   .PHONY += cleanout_$(1)_$(2)
   CLEAN_FULL += cleanout_$(1)_$(2)
