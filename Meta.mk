@@ -200,7 +200,7 @@ else
 
   ifeq ($(IMAGE_TEST),)
   test_$(1): ./$$($(1)_BIN_DIR)/$$($(1)_NAME)
-		@$$(PRE_EXEC) ./$$($(1)_BIN_DIR)/$$($(1)_NAME) $$($(1)_ARGS)
+		@$$(PRE_EXEC) $$($(1)_BIN_DIR)/$$($(1)_NAME) $$($(1)_ARGS)
   else
   test_$(1): fclean init_shared
 		docker run -itv $(SHARED_DIR)/$(USER):$(REMOTE_DIR) dev make test_$(1) DEBUG=$$(DEBUG) $(1)_ARGS=$$($(1)_ARGS)
