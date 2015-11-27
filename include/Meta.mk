@@ -5,6 +5,7 @@
 
 ### USER FLAGS INTERACTIONS ####################################################
 CFLAGS ?= -Wall -Wextra -std=c89 -pedantic 
+CXXFLAGS ?= -Wall -Wextra -std=c++11
 DEBUG_FLAGS ?= -g
 
 VALGRIND_FLAGS ?= --dsymutil=yes --leak-check=full
@@ -20,9 +21,13 @@ SRC_DIR ?= src
 
 ARFLAGS = rcs
 
+SHARED_DIR ?= /Users/Shared
+REMOTE_DIR ?= /home/$(USER)/dev
+USER ?= default
 
 ifeq ($(DEBUG),1)
   CFLAGS += $(DEBUG_FLAGS)
+  CXXFLAGS += $(DEBUG_FLAGS)
   PRE_EXEC ?= $(VALGRIND)
 endif
 ################################################################################
@@ -36,11 +41,13 @@ define generateVariables
   $$(foreach x,$$($(1)_LIBS),$$(eval $(1)_$$(x)_NAME ?= $$(x).a))
   
 
+  $(1)_LANGUAGE ?= c
   
   
-  $(1)_LDFLAGS ?= $$(LDFLAGS) $$(CFLAGS)
   $(1)_LDLIBS ?= $$(LDLIBS)
+  $(1)_LDFLAGS ?= $$(LDFLAGS)
   $(1)_CFLAGS ?= $$(CFLAGS)
+  $(1)_CXXFLAGS ?= $$(CXXFLAGS)
 
   $(1)_ARGS ?= $$(ARGS)
   $(1)_NAME = $(2)
@@ -64,6 +71,7 @@ define generateVariables
   endif
   
   $(1)_CFLAGS += $$(addprefix -I ,$$($(1)_INCS))
+  $(1)_CXXFLAGS += $$(addprefix -I ,$$($(1)_INCS))
 
 
   $(1)_LDFLAGS += $$(foreach elem,$$($(1)_LIBS),-L $$($(1)_$$(elem)_DIR)/$$($(1)_$$(elem)_LIB_DIR))
@@ -128,14 +136,21 @@ endef
 define generateRules
   $(1)_SRCS_FULL = $$(addprefix $$($(1)_SRC_DIR)/,$$($(1)_SRCS))
 
-  $(1)_OBJS = $$($(1)_SRCS:.c=.o)
+  $(1)_OBJS = $$($(1)_SRCS:.$$($(1)_LANGUAGE)=.o)
   $(1)_OBJS_FULL = $$(addprefix $$($(1)_SRC_DIR)/$$(BUILD_DIR)/,$$($(1)_OBJS))
 
-  $$($(1)_SRC_DIR)/$$(BUILD_DIR)/%.o: $$($(1)_SRC_DIR)/%.c
+  $$($(1)_SRC_DIR)/$$(BUILD_DIR)/%.o: $$($(1)_SRC_DIR)/%.$$($(1)_LANGUAGE)
 	@mkdir -p $$($(1)_SRC_DIR)/$$(BUILD_DIR)
-	@echo $(1)
-	$$(CC) $$($(1)_CFLAGS) -c $$< -o $$@
+
+ifeq ($$($(1)_LANGUAGE),c)
+		$$(CC) $$($(1)_CFLAGS) -c $$< -o $$@
 	@$$(CC) $$($(1)_CFLAGS) -MM -MT $$@ $$< >> .depend
+endif
+ifeq ($$($(1)_LANGUAGE),cpp)
+		$$(CXX) $$($(1)_CXXFLAGS) -c $$< -o $$@
+	@$$(CXX) $$($(1)_CXXFLAGS) -MM -MT $$@ $$< >> .depend
+endif
+
 	@sort -u .depend > .depend.tmp
 	@mv .depend.tmp .depend
 
@@ -147,7 +162,13 @@ define generateRules
   else
     ./$$($(1)_BIN_DIR)/$$($(1)_NAME): $$($(1)_OBJS_FULL) $$($(1)_LIBS_FULL)
 		@mkdir -p $$($(1)_BIN_DIR)
-		$$(CC) $$($(1)_LDFLAGS) $$($(1)_LDLIBS) $$($(1)_OBJS_FULL) -o ./$$($(1)_BIN_DIR)/$$($(1)_NAME)
+ifeq ($$($(1)_LANGUAGE),c)
+		$$(CC) $$($(1)_LDFLAGS) $$($(1)_CFLAGS) $$($(1)_LDLIBS) $$($(1)_OBJS_FULL) -o ./$$($(1)_BIN_DIR)/$$($(1)_NAME)
+endif
+ifeq ($$($(1)_LANGUAGE),cpp)
+		$$(CXX) $$($(1)_LDFLAGS) $$($(1)_CXXFLAGS) $$($(1)_LDLIBS) $$($(1)_OBJS_FULL) -o ./$$($(1)_BIN_DIR)/$$($(1)_NAME)
+endif
+
     $$(foreach x,$$($(1)_LIBS),$$(eval $$(call makeLib,$(1),$$(x))))
     $$(foreach x,$$($(1)_LIBS),$$(eval $$(call cleanLib,$(1),$$(x))))
     $$(foreach x,$$($(1)_LIBS),$$(eval $$(call cleanoutLib,$(1),$$(x))))
@@ -169,8 +190,13 @@ else
 	@$$(RM) -r ./$$($(1)_BIN_DIR)/$$($(1)_NAME).dSYM
 	@rmdir $$($(1)_BIN_DIR) 2> /dev/null || true
 
+  ifeq ($(IMAGE_TEST),)
   test_$(1): ./$$($(1)_BIN_DIR)/$$($(1)_NAME)
-		$$(PRE_EXEC) ./$$($(1)_BIN_DIR)/$$($(1)_NAME) $$($(1)_ARGS)
+		@$$(PRE_EXEC) ./$$($(1)_BIN_DIR)/$$($(1)_NAME) $$($(1)_ARGS)
+  else
+  test_$(1): fclean init_shared
+		docker run -itv $(SHARED_DIR)/$(USER):$(REMOTE_DIR) dev make test_$(1) DEBUG=$$(DEBUG) $(1)_ARGS=$$($(1)_ARGS)
+  endif
 
   .PHONY += test_$(1)
 
@@ -204,9 +230,17 @@ fclean: clean cleanout
 
 re: fclean all
 
+docker: fclean init_shared
+	@docker run -itv $(SHARED_DIR)/$(USER):$(REMOTE_DIR) dev
+
+init_shared:
+	@echo Initialize $(SHARED_DIR)/$(USER)
+	@$(RM) -r $(SHARED_DIR)/$(USER)
+	@cp -R . $(SHARED_DIR)/$(USER)
+
 ################################################################################
 
 -include .depend
-.PHONY: all re cleanout clean fclean $(.PHONY)
+.PHONY: all re cleanout clean fclean docker init_shared $(.PHONY)
 
 
