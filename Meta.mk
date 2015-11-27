@@ -15,6 +15,7 @@ EXTRA_DIR ?= .
 LIB_DIR ?= lib
 BIN_DIR ?= bin
 BUILD_DIR ?= .build
+VERBOSE ?= 0
 
 INCLUDE_DIR ?= include
 SRC_DIR ?= src
@@ -30,8 +31,16 @@ ifeq ($(DEBUG),1)
   CXXFLAGS += $(DEBUG_FLAGS)
   PRE_EXEC ?= $(VALGRIND)
 endif
+
+ifeq ($(VERBOSE),0)
+  V := @
+endif
 ################################################################################
 
+COLOR_RESET = \033[0m
+COLOR_CLEAN = \033[43m\033[31m
+COLOR_COMPILATION = \033[33m
+COLOR_CREATION = \033[32m
 
 ################################################################################
 define generateVariables
@@ -114,7 +123,6 @@ define cleanLib
     endif
     ifeq ($$(filter clean_$$($(1)_$(2)_DIR),$$(RULE_ACCUMULATOR)),)
       clean_$(1)_$(2):
-			@echo -n ---
 			@make -C $$($(1)_$(2)_DIR) clean
       .PHONY += clean_$(1)_$(2)
       CLEAN_FULL += clean_$(1)_$(2)
@@ -130,7 +138,6 @@ define cleanoutLib
     endif
     ifeq ($$(filter cleanout_$$($(1)_$(2)_DIR),$$(RULE_ACCUMULATOR)),)
       cleanout_$(1)_$(2):
-			@echo -n ---
 			@make -C $$($(1)_$(2)_DIR) cleanout
       .PHONY += cleanout_$(1)_$(2)
       CLEANOUT_FULL += cleanout_$(1)_$(2)
@@ -151,11 +158,21 @@ define generateRules
 		@mkdir -p $$($(1)_SRC_DIR)/$$(BUILD_DIR)
 
 ifeq ($$($(1)_LANGUAGE),c)
+    ifeq ($$(VERBOSE),1)
 		$$(CC) $$($(1)_CFLAGS) $$($(1)_INCS) -c $$< -o $$@
+    else
+		@$$(CC) $$($(1)_CFLAGS) $$($(1)_INCS) -c $$< -o $$@
+		@echo "$$(COLOR_COMPILATION)[$(1) COMPILATION]$$(COLOR_RESET) - $$(notdir $$<)"
+    endif
 		@$$(CC) $$($(1)_CFLAGS) $$($(1)_INCS) -MM -MT $$@ $$< >> .depend
 endif
 ifeq ($$($(1)_LANGUAGE),cpp)
+    ifeq ($$(VERBOSE),1)
 		$$(CXX) $$($(1)_CXXFLAGS) -c $$< -o $$@
+    else
+		@$$(CXX) $$($(1)_CXXFLAGS) -c $$< -o $$@
+		@echo "$$(COLOR_COMPILATION)[COMPILATION]$$(COLOR_RESET) - $$<"
+    endif
 		@$$(CXX) $$($(1)_CXXFLAGS) -MM -MT $$@ $$< >> .depend
 endif
 
@@ -166,15 +183,30 @@ endif
   ifeq ($$(suffix $$($(1)_NAME)),.a)
     ./$$($(1)_LIB_DIR)/$$($(1)_NAME): $$($(1)_OBJS_FULL)
 		@mkdir -p $$($(1)_LIB_DIR)
-		$$(AR) $$(ARFLAGS) ./$$($(1)_LIB_DIR)/$$($(1)_NAME) $$($(1)_OBJS_FULL)
+        ifeq ($$(VERBOSE),1)
+		  $$(AR) $$(ARFLAGS) ./$$($(1)_LIB_DIR)/$$($(1)_NAME) $$($(1)_OBJS_FULL)
+        else
+		  @$$(AR) $$(ARFLAGS) ./$$($(1)_LIB_DIR)/$$($(1)_NAME) $$($(1)_OBJS_FULL)
+		  @echo "$$(COLOR_CREATION)[CREATE LIBRARY]$$(COLOR_RESET) - $$@"
+        endif
   else
     ./$$($(1)_BIN_DIR)/$$($(1)_NAME): $$($(1)_OBJS_FULL) $$($(1)_LIBS_FULL)
 		@mkdir -p $$($(1)_BIN_DIR)
 ifeq ($$($(1)_LANGUAGE),c)
-		$$(CC) $$($(1)_LDFLAGS) $$($(1)_CFLAGS) $$($(1)_INCS) $$($(1)_LDLIBS) $$($(1)_OBJS_FULL) -o ./$$($(1)_BIN_DIR)/$$($(1)_NAME)
+        ifeq ($$(VERBOSE),1)
+		  $$(CC) $$($(1)_OBJS_FULL) $$($(1)_LDFLAGS) $$($(1)_CFLAGS) $$($(1)_INCS) $$($(1)_LDLIBS) -o ./$$($(1)_BIN_DIR)/$$($(1)_NAME)
+        else
+		  @$$(CC) $$($(1)_OBJS_FULL) $$($(1)_LDFLAGS) $$($(1)_CFLAGS) $$($(1)_INCS) $$($(1)_LDLIBS) -o ./$$($(1)_BIN_DIR)/$$($(1)_NAME)
+		  @echo "$$(COLOR_CREATION)[CREATE BINARY]$$(COLOR_RESET) - $$@"
+        endif
 endif
 ifeq ($$($(1)_LANGUAGE),cpp)
-		$$(CXX) $$($(1)_LDFLAGS) $$($(1)_CXXFLAGS) $$($(1)_INCS) $$($(1)_LDLIBS) $$($(1)_OBJS_FULL) -o ./$$($(1)_BIN_DIR)/$$($(1)_NAME)
+    ifeq ($$(VERBOSE),1)
+		$$(CXX) $$($(1)_OBJS_FULL) $$($(1)_LDFLAGS) $$($(1)_CXXFLAGS) $$($(1)_INCS) $$($(1)_LDLIBS) -o ./$$($(1)_BIN_DIR)/$$($(1)_NAME)
+    else
+		@$$(CXX) $$($(1)_OBJS_FULL) $$($(1)_LDFLAGS) $$($(1)_CXXFLAGS) $$($(1)_INCS) $$($(1)_LDLIBS) -o ./$$($(1)_BIN_DIR)/$$($(1)_NAME)
+		@echo "$$(COLOR_CREATION)[CREATE BINARY]$$(COLOR_RESET) - $$@"
+    endif
 endif
 
     $$(foreach x,$$($(1)_LIBS),$$(eval $$(call makeLib,$(1),$$(x))))
@@ -183,17 +215,17 @@ endif
   endif
 
   clean_$(1):
-	@echo --- Clean $(1) OBJECTS...
+	@echo "$$(COLOR_CLEAN)[CLEAN OBJECTS]$$(COLOR_RESET) $$($(1)_NAME)"
 	@$$(RM) -r $$($(1)_SRC_DIR)/$$(BUILD_DIR)
 
 ifeq ($$(suffix $($(1)_NAME)),.a)
   cleanout_$(1):
-	@echo --- Clean $$($(1)_NAME)
+	@echo "$$(COLOR_CLEAN)[CLEAN]$$(COLOR_RESET) $$($(1)_NAME)"
 	@$$(RM) $$($(1)_LIB_DIR)/$$($(1)_NAME)
 	@rmdir ./$$($(1)_LIB_DIR) 2> /dev/null || true
 else
   cleanout_$(1):
-	@echo --- Clean $$($(1)_NAME)
+	@echo "$$(COLOR_CLEAN)[CLEAN]$$(COLOR_RESET) $$($(1)_NAME)"
 	@$$(RM) ./$$($(1)_BIN_DIR)/$$($(1)_NAME)
 	@$$(RM) -r ./$$($(1)_BIN_DIR)/$$($(1)_NAME).dSYM
 	@rmdir $$($(1)_BIN_DIR) 2> /dev/null || true
@@ -203,7 +235,7 @@ else
 		@$$(PRE_EXEC) $$($(1)_BIN_DIR)/$$($(1)_NAME) $$($(1)_ARGS)
   else
   test_$(1): fclean init_shared
-		docker run -itv $(SHARED_DIR)/$(USER):$(REMOTE_DIR) dev make test_$(1) DEBUG=$$(DEBUG) $(1)_ARGS=$$($(1)_ARGS)
+		$$(V)docker run -itv $(SHARED_DIR)/$(USER):$(REMOTE_DIR) dev make test_$(1) DEBUG=$$(DEBUG) $(1)_ARGS=$$($(1)_ARGS)
   endif
 
   .PHONY += test_$(1)
