@@ -27,8 +27,6 @@ REMOTE_DIR ?= /home/garm/dev
 USER ?= default
 
 ifeq ($(DEBUG),1)
-  CFLAGS += $(DEBUG_FLAGS)
-  CXXFLAGS += $(DEBUG_FLAGS)
   PRE_EXEC ?= $(VALGRIND)
 endif
 
@@ -57,6 +55,11 @@ define generateVariables
   $(1)_LDFLAGS ?= $$(LDFLAGS)
   $(1)_CFLAGS ?= $$(CFLAGS)
   $(1)_CXXFLAGS ?= $$(CXXFLAGS)
+
+ifeq ($(DEBUG),1)
+  $(1)_CFLAGS += $(DEBUG_FLAGS)
+  $(1)_CXXFLAGS += $(DEBUG_FLAGS)
+endif
 
   $(1)_ARGS ?= $$(ARGS)
   $(1)_NAME = $(2)
@@ -110,7 +113,7 @@ define makeLib
     TEMP := $$($(1)_$(2)_DIR)/$$($(1)_$(2)_LIB_DIR)/$$($(1)_$(2)_NAME)
 	ifeq ($$(filter $$(TEMP),$$(RULE_ACCUMULATOR)),)
       $$(TEMP):
-		@make -C $$($(1)_$(2)_DIR) $$($(1)_$(2)_LIB_DIR)/$$($(1)_$(2)_NAME)
+		@make -C $$($(1)_$(2)_DIR) $$($(1)_$(2)_LIB_DIR)/$$($(1)_$(2)_NAME) DEBUG=$$(DEBUG)
       RULE_ACCUMULATOR += $$($(1)_$(2)_DIR)/$$($(1)_$(2)_LIB_DIR)/$$($(1)_$(2)_NAME)
     endif
   endif
