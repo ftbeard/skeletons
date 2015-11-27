@@ -95,37 +95,47 @@ all: $(OUTPUTS_FULL) ###########################################################
 
 define makeLib
   ifeq ($$(filter $$($(1)_$(2)_NAME),$$(OUTPUTS)),) 
-  ifeq ($$(shell pwd),$$(realpath $$($(1)_$(2)_DIR)))
-    $$(error Error: Maybe you forgotten $$($(1)_$(2)_NAME) in OUTPUTS var)
-  endif
-    $$($(1)_$(2)_DIR)/$$($(1)_$(2)_LIB_DIR)/$$($(1)_$(2)_NAME):
+    ifeq ($$(shell pwd),$$(realpath $$($(1)_$(2)_DIR)))
+      $$(error Error: Maybe you forgotten $$($(1)_$(2)_NAME) in OUTPUTS var)
+    endif
+    TEMP := $$($(1)_$(2)_DIR)/$$($(1)_$(2)_LIB_DIR)/$$($(1)_$(2)_NAME)
+	ifeq ($$(filter $$(TEMP),$$(RULE_ACCUMULATOR)),)
+      $$(TEMP):
 		@make -C $$($(1)_$(2)_DIR) $$($(1)_$(2)_LIB_DIR)/$$($(1)_$(2)_NAME)
+      RULE_ACCUMULATOR += $$($(1)_$(2)_DIR)/$$($(1)_$(2)_LIB_DIR)/$$($(1)_$(2)_NAME)
+    endif
   endif
 endef
 
 define cleanLib
   ifeq ($$(filter $$($(1)_$(2)_NAME),$$(OUTPUTS)),) 
-  ifeq ($$(shell pwd),$$(realpath $$($(1)_$(2)_DIR)))
-    $$(error Error: Maybe you forgotten $$($(1)_$(2)_NAME) in OUTPUTS var)
-  endif
-  clean_$(1)_$(2):
-		@echo -n ---
-		@make -C $$($(1)_$(2)_DIR) clean
-  .PHONY += clean_$(1)_$(2)
-  CLEAN_FULL += clean_$(1)_$(2)
+    ifeq ($$(shell pwd),$$(realpath $$($(1)_$(2)_DIR)))
+      $$(error Error: Maybe you forgotten $$($(1)_$(2)_NAME) in OUTPUTS var)
+    endif
+    ifeq ($$(filter clean_$$($(1)_$(2)_DIR),$$(RULE_ACCUMULATOR)),)
+      clean_$(1)_$(2):
+			@echo -n ---
+			@make -C $$($(1)_$(2)_DIR) clean
+      .PHONY += clean_$(1)_$(2)
+      CLEAN_FULL += clean_$(1)_$(2)
+      RULE_ACCUMULATOR += clean_$$($(1)_$(2)_DIR)
+    endif
   endif
 endef
 
 define cleanoutLib
   ifeq ($$(filter $$($(1)_$(2)_NAME),$$(OUTPUTS)),) 
-  ifeq ($$(shell pwd),$$(realpath $$($(1)_$(2)_DIR)))
-    $$(error Error: Maybe you forgotten $$($(1)_$(2)_NAME) in OUTPUTS var)
-  endif
-  cleanout_$(1)_$(2):
-		@echo -n ---
-		@make -C $$($(1)_$(2)_DIR) cleanout
-  .PHONY += cleanout_$(1)_$(2)
-  CLEAN_FULL += cleanout_$(1)_$(2)
+    ifeq ($$(shell pwd),$$(realpath $$($(1)_$(2)_DIR)))
+      $$(error Error: Maybe you forgotten $$($(1)_$(2)_NAME) in OUTPUTS var)
+    endif
+    ifeq ($$(filter cleanout_$$($(1)_$(2)_DIR),$$(RULE_ACCUMULATOR)),)
+      cleanout_$(1)_$(2):
+			@echo -n ---
+			@make -C $$($(1)_$(2)_DIR) cleanout
+      .PHONY += cleanout_$(1)_$(2)
+      CLEANOUT_FULL += cleanout_$(1)_$(2)
+      RULE_ACCUMULATOR += cleanout_$$($(1)_$(2)_DIR)
+    endif
   endif
 endef
 
