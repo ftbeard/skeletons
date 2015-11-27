@@ -4,8 +4,8 @@
 
 
 ### USER FLAGS INTERACTIONS ####################################################
-CFLAGS ?= -Wall -Wextra -std=c89 -pedantic 
-CXXFLAGS ?= -Wall -Wextra -std=c++11
+CFLAGS ?= -Wall -Wextra -Werror -std=c89 -pedantic 
+CXXFLAGS ?= -Wall -Wextra -Werror -std=c++11
 DEBUG_FLAGS ?= -g
 
 VALGRIND_FLAGS ?= --dsymutil=yes --leak-check=full
