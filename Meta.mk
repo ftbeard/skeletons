@@ -11,7 +11,7 @@ DEBUG_FLAGS ?= -g
 VALGRIND_FLAGS ?= --dsymutil=yes --leak-check=full
 VALGRIND := valgrind $(VALGRIND_FLAGS)
 
-EXTRA_DIR ?= extra
+EXTRA_DIR ?= .
 LIB_DIR ?= lib
 BIN_DIR ?= bin
 BUILD_DIR ?= .build
@@ -37,7 +37,7 @@ endif
 define generateVariables
   $$(foreach x,$$($(1)_LIBS),$$(eval $(1)_$$(x)_INCS ?= $$(INCLUDE_DIR)))
   $$(foreach x,$$($(1)_LIBS),$$(eval $(1)_$$(x)_LIB_DIR ?= $$(LIB_DIR)))
-  $$(foreach x,$$($(1)_LIBS),$$(eval $(1)_$$(x)_DIR ?= $$(x)))
+  $$(foreach x,$$($(1)_LIBS),$$(eval $(1)_$$(x)_DIR ?= $$(EXTRA_DIR)/$$(x)))
   $$(foreach x,$$($(1)_LIBS),$$(eval $(1)_$$(x)_NAME ?= $$(x).a))
   
 
