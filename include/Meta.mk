@@ -70,9 +70,7 @@ define generateVariables
     OUTPUTS_FULL += ./$$($(1)_BIN_DIR)/$$($(1)_NAME)
   endif
   
-  $(1)_CFLAGS += $$(addprefix -I ,$$($(1)_INCS))
-  $(1)_CXXFLAGS += $$(addprefix -I ,$$($(1)_INCS))
-
+  $(1)_INCS := $$(addprefix -I ,$$($(1)_INCS))
 
   $(1)_LDFLAGS += $$(foreach elem,$$($(1)_LIBS),-L $$($(1)_$$(elem)_DIR)/$$($(1)_$$(elem)_LIB_DIR))
   $(1)_LDLIBS += $$(foreach elem,$$($(1)_LIBS),$$(subst lib,-l,$$(elem)))
@@ -140,15 +138,15 @@ define generateRules
   $(1)_OBJS_FULL = $$(addprefix $$($(1)_SRC_DIR)/$$(BUILD_DIR)/,$$($(1)_OBJS))
 
   $$($(1)_SRC_DIR)/$$(BUILD_DIR)/%.o: $$($(1)_SRC_DIR)/%.$$($(1)_LANGUAGE)
-	@mkdir -p $$($(1)_SRC_DIR)/$$(BUILD_DIR)
+		@mkdir -p $$($(1)_SRC_DIR)/$$(BUILD_DIR)
 
 ifeq ($$($(1)_LANGUAGE),c)
-		$$(CC) $$($(1)_CFLAGS) -c $$< -o $$@
-	@$$(CC) $$($(1)_CFLAGS) -MM -MT $$@ $$< >> .depend
+		$$(CC) $$($(1)_CFLAGS) $$($(1)_INCS) -c $$< -o $$@
+		@$$(CC) $$($(1)_CFLAGS) $$($(1)_INCS) -MM -MT $$@ $$< >> .depend
 endif
 ifeq ($$($(1)_LANGUAGE),cpp)
 		$$(CXX) $$($(1)_CXXFLAGS) -c $$< -o $$@
-	@$$(CXX) $$($(1)_CXXFLAGS) -MM -MT $$@ $$< >> .depend
+		@$$(CXX) $$($(1)_CXXFLAGS) -MM -MT $$@ $$< >> .depend
 endif
 
 	@sort -u .depend > .depend.tmp
@@ -163,10 +161,10 @@ endif
     ./$$($(1)_BIN_DIR)/$$($(1)_NAME): $$($(1)_OBJS_FULL) $$($(1)_LIBS_FULL)
 		@mkdir -p $$($(1)_BIN_DIR)
 ifeq ($$($(1)_LANGUAGE),c)
-		$$(CC) $$($(1)_LDFLAGS) $$($(1)_CFLAGS) $$($(1)_LDLIBS) $$($(1)_OBJS_FULL) -o ./$$($(1)_BIN_DIR)/$$($(1)_NAME)
+		$$(CC) $$($(1)_LDFLAGS) $$($(1)_CFLAGS) $$($(1)_INCS) $$($(1)_LDLIBS) $$($(1)_OBJS_FULL) -o ./$$($(1)_BIN_DIR)/$$($(1)_NAME)
 endif
 ifeq ($$($(1)_LANGUAGE),cpp)
-		$$(CXX) $$($(1)_LDFLAGS) $$($(1)_CXXFLAGS) $$($(1)_LDLIBS) $$($(1)_OBJS_FULL) -o ./$$($(1)_BIN_DIR)/$$($(1)_NAME)
+		$$(CXX) $$($(1)_LDFLAGS) $$($(1)_CXXFLAGS) $$($(1)_INCS) $$($(1)_LDLIBS) $$($(1)_OBJS_FULL) -o ./$$($(1)_BIN_DIR)/$$($(1)_NAME)
 endif
 
     $$(foreach x,$$($(1)_LIBS),$$(eval $$(call makeLib,$(1),$$(x))))
