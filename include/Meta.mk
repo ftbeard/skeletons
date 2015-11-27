@@ -22,7 +22,7 @@ SRC_DIR ?= src
 ARFLAGS = rcs
 
 SHARED_DIR ?= /Users/Shared
-REMOTE_DIR ?= /home/$(USER)/dev
+REMOTE_DIR ?= /home/garm/dev
 USER ?= default
 
 ifeq ($(DEBUG),1)
