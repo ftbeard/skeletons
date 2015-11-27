@@ -149,8 +149,8 @@ ifeq ($$($(1)_LANGUAGE),cpp)
 		@$$(CXX) $$($(1)_CXXFLAGS) -MM -MT $$@ $$< >> .depend
 endif
 
-	@sort -u .depend > .depend.tmp
-	@mv .depend.tmp .depend
+	@#sort -u .depend > .depend.tmp
+	@#mv .depend.tmp .depend
 
 
   ifeq ($$(suffix $$($(1)_NAME)),.a)
