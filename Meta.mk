@@ -15,6 +15,7 @@ EXTRA_DIR ?= .
 LIB_DIR ?= lib
 BIN_DIR ?= bin
 BUILD_DIR ?= .build
+CLEAN_LIB ?= 1
 VERBOSE ?= 0
 
 INCLUDE_DIR ?= include
@@ -125,7 +126,7 @@ define cleanLib
       $$(error Error: Maybe you forgotten $$($(1)_$(2)_NAME) in OUTPUTS var)
     endif
     ifeq ($$(filter clean_$$($(1)_$(2)_DIR),$$(RULE_ACCUMULATOR)),)
-	  ifneq ($$(DONT_CLEAN_LIB),1)
+	  ifneq ($$(CLEAN_LIB),0)
         clean_$(1)_$(2):
 			@make -C $$($(1)_$(2)_DIR) clean
         .PHONY += clean_$(1)_$(2)
@@ -142,7 +143,7 @@ define cleanoutLib
       $$(error Error: Maybe you forgotten $$($(1)_$(2)_NAME) in OUTPUTS var)
     endif
     ifeq ($$(filter cleanout_$$($(1)_$(2)_DIR),$$(RULE_ACCUMULATOR)),)
-	  ifneq ($$(DONT_CLEAN_LIB),1)
+	  ifneq ($$(CLEAN_LIB),0)
         cleanout_$(1)_$(2):
 			@make -C $$($(1)_$(2)_DIR) cleanout
         .PHONY += cleanout_$(1)_$(2)
