@@ -17,6 +17,7 @@ BIN_DIR ?= bin
 BUILD_DIR ?= .build
 CLEAN_LIB ?= 1
 VERBOSE ?= 0
+EXPOSED_PORTS := $(foreach x,$(EXPOSED_PORTS),-p $(x):$(x))
 
 INCLUDE_DIR ?= include
 SRC_DIR ?= src
@@ -243,7 +244,7 @@ else
 		@$$(PRE_EXEC) $$($(1)_BIN_DIR)/$$($(1)_NAME) $$($(1)_ARGS)
   else
   test_$(1): fclean init_shared
-		$$(V)docker run -itv $(SHARED_DIR)/$(USER):$(REMOTE_DIR) dev make test_$(1) DEBUG=$$(DEBUG) $(1)_ARGS=$$($(1)_ARGS)
+		$$(V)docker run $(EXPOSED_PORTS) -itv $(SHARED_DIR)/$(USER):$(REMOTE_DIR) dev make test_$(1) DEBUG=$$(DEBUG) $(1)_ARGS=$$($(1)_ARGS)
   endif
 
   .PHONY += test_$(1)
@@ -279,7 +280,7 @@ fclean: clean cleanout
 re: fclean all
 
 docker: fclean init_shared
-	@docker run -itv $(SHARED_DIR)/$(USER):$(REMOTE_DIR) dev
+	@docker run $(EXPOSED_PORTS) -itv $(SHARED_DIR)/$(USER):$(REMOTE_DIR) dev
 
 init_shared:
 	@echo Initialize $(SHARED_DIR)/$(USER)
