@@ -30,6 +30,7 @@ USER ?= default
 
 ifeq ($(DEBUG),1)
   PRE_EXEC ?= $(VALGRIND)
+  DEBUG_MSG ?= (with $(DEBUG_FLAGS)) 
 endif
 
 ifeq ($(VERBOSE),0)
@@ -171,7 +172,7 @@ ifeq ($$($(1)_LANGUAGE),c)
 		$$(CC) $$($(1)_CFLAGS) $$($(1)_INCS) -c $$< -o $$@
     else
 		@$$(CC) $$($(1)_CFLAGS) $$($(1)_INCS) -c $$< -o $$@
-		@echo "$$(COLOR_COMPILATION)[$(1) COMPILATION]$$(COLOR_RESET) - $$(notdir $$<)"
+		@echo "$$(COLOR_COMPILATION)[ $(1) COMPILATION $$(DEBUG_MSG)]$$(COLOR_RESET) - $$(notdir $$<)"
     endif
 		@$$(CC) $$($(1)_CFLAGS) $$($(1)_INCS) -MM -MT $$@ $$< >> .depend
 endif
@@ -180,7 +181,7 @@ ifeq ($$($(1)_LANGUAGE),cpp)
 		$$(CXX) $$($(1)_CXXFLAGS) -c $$< -o $$@
     else
 		@$$(CXX) $$($(1)_CXXFLAGS) -c $$< -o $$@
-		@echo "$$(COLOR_COMPILATION)[COMPILATION]$$(COLOR_RESET) - $$<"
+		@echo "$$(COLOR_COMPILATION)[ $(1) COMPILATION $$(DEBUG_MSG)]$$(COLOR_RESET) - $$<"
     endif
 		@$$(CXX) $$($(1)_CXXFLAGS) -MM -MT $$@ $$< >> .depend
 endif
