@@ -125,11 +125,13 @@ define cleanLib
       $$(error Error: Maybe you forgotten $$($(1)_$(2)_NAME) in OUTPUTS var)
     endif
     ifeq ($$(filter clean_$$($(1)_$(2)_DIR),$$(RULE_ACCUMULATOR)),)
-      clean_$(1)_$(2):
+	  ifneq ($$(DONT_CLEAN_LIB),1)
+        clean_$(1)_$(2):
 			@make -C $$($(1)_$(2)_DIR) clean
-      .PHONY += clean_$(1)_$(2)
-      CLEAN_FULL += clean_$(1)_$(2)
-      RULE_ACCUMULATOR += clean_$$($(1)_$(2)_DIR)
+        .PHONY += clean_$(1)_$(2)
+        CLEAN_FULL += clean_$(1)_$(2)
+        RULE_ACCUMULATOR += clean_$$($(1)_$(2)_DIR)
+	  endif
     endif
   endif
 endef
@@ -140,11 +142,13 @@ define cleanoutLib
       $$(error Error: Maybe you forgotten $$($(1)_$(2)_NAME) in OUTPUTS var)
     endif
     ifeq ($$(filter cleanout_$$($(1)_$(2)_DIR),$$(RULE_ACCUMULATOR)),)
-      cleanout_$(1)_$(2):
+	  ifneq ($$(DONT_CLEAN_LIB),1)
+        cleanout_$(1)_$(2):
 			@make -C $$($(1)_$(2)_DIR) cleanout
-      .PHONY += cleanout_$(1)_$(2)
-      CLEANOUT_FULL += cleanout_$(1)_$(2)
-      RULE_ACCUMULATOR += cleanout_$$($(1)_$(2)_DIR)
+        .PHONY += cleanout_$(1)_$(2)
+        CLEANOUT_FULL += cleanout_$(1)_$(2)
+        RULE_ACCUMULATOR += cleanout_$$($(1)_$(2)_DIR)
+	  endif
     endif
   endif
 endef
