@@ -178,12 +178,12 @@ ifeq ($$($(1)_LANGUAGE),c)
 endif
 ifeq ($$($(1)_LANGUAGE),cpp)
     ifeq ($$(VERBOSE),1)
-		$$(CXX) $$($(1)_CXXFLAGS) -c $$< -o $$@
+		$$(CXX) $$($(1)_CXXFLAGS) $$($(1)_INCS) -c $$< -o $$@
     else
-		@$$(CXX) $$($(1)_CXXFLAGS) -c $$< -o $$@
-		@echo "$$(COLOR_COMPILATION)[ $(1) COMPILATION $$(DEBUG_MSG)]$$(COLOR_RESET) - $$<"
+		@$$(CXX) $$($(1)_CXXFLAGS) $$($(1)_INCS) -c $$< -o $$@
+		@echo "$$(COLOR_COMPILATION)[ $(1) COMPILATION $$(DEBUG_MSG)]$$(COLOR_RESET) - $$(notdir $$<)"
     endif
-		@$$(CXX) $$($(1)_CXXFLAGS) -MM -MT $$@ $$< >> .depend
+		@$$(CXX) $$($(1)_CXXFLAGS) $$($(1)_INCS) -MM -MT $$@ $$< >> .depend
 endif
 
 	@#sort -u .depend > .depend.tmp
