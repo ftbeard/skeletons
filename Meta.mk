@@ -116,7 +116,7 @@ define makeLib
     TEMP := $$($(1)_$(2)_DIR)/$$($(1)_$(2)_LIB_DIR)/$$($(1)_$(2)_NAME)
 	ifeq ($$(filter $$(TEMP),$$(RULE_ACCUMULATOR)),)
       $$(TEMP):
-		@make -C $$($(1)_$(2)_DIR) $$($(1)_$(2)_LIB_DIR)/$$($(1)_$(2)_NAME) DEBUG=$$(DEBUG)
+		@make -C $$($(1)_$(2)_DIR) $$($(1)_$(2)_LIB_DIR)/$$($(1)_$(2)_NAME) DEBUG=$$(DEBUG) CLEAN_LIB=$$(CLEAN_LIB)
       RULE_ACCUMULATOR += $$($(1)_$(2)_DIR)/$$($(1)_$(2)_LIB_DIR)/$$($(1)_$(2)_NAME)
     endif
   endif
