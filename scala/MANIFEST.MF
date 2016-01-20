@@ -1,0 +1,2 @@
+Main-Class: HelloWorld
+Class-Path: /usr/local/opt/scala/libexec/lib/scala-library.jar
